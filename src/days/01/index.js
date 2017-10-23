@@ -76,10 +76,28 @@ const DRUM_BUTTONS = {
   },
 };
 
+const PRESETS = {
+  0: [
+    { keyCode: 75 },
+    { keyCode: 75 },
+    { keyCode: 76 },
+  ],
+  1: [
+    { keyCode: 71 },
+    { keyCode: 70 },
+    { keyCode: 71, timeout: 200 },
+    { keyCode: 71, timeout: 300 },
+    { keyCode: 72 },
+  ],
+};
+
 class Challenge01 extends CommonChallenge {
   constructor() {
     super();
-    this.__template = `<div class="drum-kit"><ul class="button-list">${Challenge01.renderButtons()}</ul></div>`;
+    this.__template = `<div class="drum-kit">
+<ul class="button-list">${Challenge01.renderButtons()}</ul>
+<ul class="button-list">${Challenge01.renderPresets()}</ul>
+</div>`;
   }
 
   static renderButtons() {
@@ -96,6 +114,19 @@ class Challenge01 extends CommonChallenge {
           </button>
         </li>`;
     }).join('');
+  }
+
+  static renderPresets() {
+    return Object.keys(PRESETS).map(k => {
+      return '' +
+        `<li class="button-list-item">
+          <button class="preset-button" data-preset-id="${k}">
+            <span class="preset-button-text preset-button-text-index">Preset #${k}</span>
+            <span data-value="play" class="preset-button-text preset-button-text-play">Play</span>
+            <span data-value="stop" class="preset-button-text preset-button-text-stop">Stop</span>
+          </button>
+        </li>`;
+    });
   }
 
   static onKeyUp(e) {
@@ -126,13 +157,46 @@ class Challenge01 extends CommonChallenge {
     }
   }
 
+  static playPreset(preset, presetId) {
+    const toPlay = preset.shift();
+
+    Challenge01.activateDrum(toPlay.keyCode);
+
+    if (preset.length > 0) {
+      setTimeout(() => {
+        Challenge01.playPreset(preset, presetId);
+      }, toPlay.timeout || 400);
+    } else {
+      document.querySelector(`button[data-preset-id="${presetId}"]`).classList.remove('is-playing');
+    }
+  }
+
+  static onPresetClick(e) {
+    const button = e.currentTarget;
+    const presetId = parseInt(button.getAttribute('data-preset-id'), 10);
+    button.classList.add('is-playing');
+
+    if (typeof(presetId) === 'number' && !isNaN(presetId)) {
+      Challenge01.playPreset(PRESETS[presetId].slice(), presetId);
+    } else {
+      button.classList.remove('is-playing');
+    }
+  }
+
   static enableListeners() {
     window.addEventListener('keyup', Challenge01.onKeyUp);
+
     const buttons = document.querySelectorAll('.drum-button');
+
     Array.from(buttons).forEach(button => {
       button.addEventListener('click', Challenge01.onClick);
     });
 
+    const presetButtons = document.querySelectorAll('.preset-button');
+
+    Array.from(presetButtons).forEach(button => {
+      button.addEventListener('click', Challenge01.onPresetClick);
+    });
   }
 
   onInit() {
