@@ -1,8 +1,9 @@
 export default class CommonChallenge {
   constructor() {
-    this.__bodyClass = '';
+    this.__template = '';
   }
-  getBodyClass() {
-    return this.__bodyClass;
+
+  renderHTML() {
+    return this.__template;
   }
 }
